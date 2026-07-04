@@ -82,7 +82,15 @@ window.Sofa.ui = (() => {
     }
     .sofa-balloon.open { display: flex; }
 
+    /* Barra do topo: contexto à esquerda, botão limpar à direita */
+    .sofa-topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .sofa-context {
+      flex: 1;
       font-size: 11px;
       color: #9a97b8;
       border-left: 2px solid #6d6a8f;
@@ -90,6 +98,22 @@ window.Sofa.ui = (() => {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* Botão discreto: só ganha destaque no hover */
+    .sofa-clear {
+      border: none;
+      background: transparent;
+      color: #9a97b8;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+    .sofa-clear:hover {
+      color: #e9e7ff;
+      background: #26243a;
     }
 
     .sofa-answer {
@@ -142,7 +166,10 @@ window.Sofa.ui = (() => {
       <style>${STYLES}</style>
 
       <div class="sofa-balloon" role="dialog" aria-label="sofa assistente">
-        <div class="sofa-context"></div>
+        <div class="sofa-topbar">
+          <div class="sofa-context"></div>
+          <button class="sofa-clear" title="Limpar conversa" aria-label="Limpar conversa">🧹</button>
+        </div>
         <div class="sofa-answer"></div>
         <div class="sofa-row">
           <input class="sofa-input" type="text" placeholder="Pergunte sobre esta página..." />
@@ -160,6 +187,7 @@ window.Sofa.ui = (() => {
       fab: shadow.querySelector(".sofa-fab"),
       balloon: shadow.querySelector(".sofa-balloon"),
       contextEl: shadow.querySelector(".sofa-context"),
+      clearBtn: shadow.querySelector(".sofa-clear"),
       answerEl: shadow.querySelector(".sofa-answer"),
       input: shadow.querySelector(".sofa-input"),
       sendBtn: shadow.querySelector(".sofa-send"),
