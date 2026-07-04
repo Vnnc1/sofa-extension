@@ -1,0 +1,24 @@
+# ============================================================
+# SOFA — .gitignore
+# O que NUNCA deve ir para o repositório.
+# ============================================================
+
+# Lixo de sistema operacional
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores/IDEs
+.vscode/
+.idea/
+
+# Dependências e builds (para quando migrar para Vite/CRXJS)
+node_modules/
+dist/
+*.zip
+
+# Segredos — nunca commitar chaves de API.
+# (A chave do Gemini fica no chrome.storage, fora do projeto,
+#  mas se um dia criar um .env, ele já está protegido.)
+.env
+.env.*
