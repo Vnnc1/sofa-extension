@@ -26,6 +26,26 @@ Abra um vídeo de música no YouTube, clique no ícone flutuante e pergunte:
 A Sofa lê o título do vídeo e o canal como contexto — exatamente o primeiro
 passo do seu fluxo YouTube → Spotify.
 
+Depois, teste a **memória**: faça uma segunda pergunta como
+> "O que eu te perguntei antes?"
+
+E numa busca do Mercado Livre, experimente:
+> "Qual desses tem o melhor custo-benefício?"
+
+## Funcionalidades
+
+- **Contexto por site** — leitores específicos para YouTube (vídeo/canal),
+  Spotify (música/artista) e Mercado Livre (busca com lista de produtos e
+  página de produto com preço/frete).
+- **Histórico de conversa** — as últimas 5 trocas ficam no
+  `chrome.storage.session` (sobrevivem ao service worker dormir, somem ao
+  fechar o navegador) e são reenviadas a cada pergunta, então a Sofa lembra
+  do que vocês falaram. O botão 🧹 no balão apaga a memória.
+- **Fallback de modelos** — a cota gratuita do Gemini é contada por modelo;
+  quando um devolve erro de limite (429) ou sobrecarga (503), a Sofa tenta
+  automaticamente o próximo da lista em `gemini.js` (flash-lite → flash →
+  flash-latest), sem o usuário perceber.
+
 ## Arquitetura
 
 ```
@@ -36,10 +56,11 @@ sofa-extension/
 └── src/
     ├── background/            Service worker (ES Modules)
     │   ├── index.js           Entrada: recebe mensagens e orquestra os módulos
-    │   ├── prompt.js          Engenharia de contexto: monta o texto para a IA
-    │   └── gemini.js          Cliente da API do Gemini (único lugar que fala com o Google)
+    │   ├── prompt.js          Engenharia de contexto: histórico + contexto + pergunta → contents[]
+    │   ├── history.js         Memória da conversa (chrome.storage.session, janela deslizante)
+    │   └── gemini.js          Cliente da API do Gemini com fallback de modelos
     ├── content/               Injetado nas páginas (compartilham window.Sofa)
-    │   ├── context.js         Coleta o contexto da página (título, seleção, YouTube...)
+    │   ├── context.js         Coleta contexto: título, seleção, YouTube, Spotify, Mercado Livre
     │   ├── ui.js              Visual: Shadow DOM, estilos, botão flutuante e balão
     │   └── index.js           Entrada: liga UI + contexto + mensagens
     └── popup/
@@ -54,10 +75,14 @@ Melhorar o prompt? `prompt.js`. Ler contexto de um site novo? `context.js`.
 Fluxo de uma pergunta:
 
 ```
-[página] src/content ──mensagem──▶ src/background ──fetch──▶ API Gemini
-   ▲     (index.js)                (index.js → prompt.js → gemini.js)
-   │                                    │
-   └────────── resposta ◀───────────────┘
+[página] src/content ──ASK_AI──▶ src/background ─────fetch────▶ API Gemini
+   ▲     (index.js)              1. history.js  lê a memória     (com fallback:
+   │                             2. prompt.js   monta contents    limite? tenta o
+   │                             3. gemini.js   chama a IA        próximo modelo)
+   │                             4. history.js  salva a troca          │
+   └───────────── resposta ◀──────────────────────────────────────────┘
+
+[🧹 limpar] ──CLEAR_HISTORY──▶ history.js apaga o storage.session
 ```
 
 ## Próximos degraus (roadmap)
@@ -69,9 +94,18 @@ Fluxo de uma pergunta:
       Além do mais estou no inicio, estou praticando e tenho pouco conhecimento sobre javascript/typescript
    )
 
-2. Histórico de conversa (guardar as últimas mensagens e enviar junto)
+2. **Feito** — Histórico de conversa (guardar as últimas mensagens e enviar junto)
+
+   (
+      Inicio de um breve Histórico de Conversa que vai vim melhorias para a funcionalidade.
+      Implementado com chrome.storage.session + janela deslizante de 10 itens e botão de limpar no balão.
+   )
 3. Sugestões proativas (a Sofa comenta sozinha quando detecta uma música)
-4. Leitores de contexto para mais sites (GitHub, artigos, e-commerce)
+4. **Em andamento** — Leitores de contexto para mais sites (GitHub, artigos, e-commerce)
+
+   (
+      Spotify e Mercado Livre já implementados; próximos: GitHub e artigos.
+   )
 5. OAuth 2.0 com o Spotify (chrome.identity + Spotify Web API)
 6. Botão "Salvar no Spotify" quando detectar música no YouTube
 7. Migrar o código para TypeScript com um bundler (Vite + CRXJS)

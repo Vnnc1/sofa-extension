@@ -25,12 +25,19 @@
 
     if (willOpen) {
       const ctx = getPageContext();
+
+      // Ternários ENCADEADOS = if / else if / else numa expressão só.
+      // Cada caso exclui os seguintes; o último é o "senão" genérico.
       ui.contextEl.textContent = ctx.youtube
         ? `🎵 Assistindo: ${ctx.youtube.videoTitle}`
+        : ctx.spotify
+        ? `🎧 Escutando: ${ctx.spotify.musicTitle}`
+        : ctx.mercadoLivre?.type === "lista"
+        ? `🛒 Pesquisando: ${ctx.mercadoLivre.searchTerm}`
+        : ctx.mercadoLivre?.type === "produto"
+        ? `🛒 Vendo: ${ctx.mercadoLivre.productTitle}`
         : `📄 ${ctx.title}`;
-      ui.contextEl.textContent = ctx.spotify
-        ? `Escutando: ${ctx.spotify.musicTitle}`
-        : ` ${ctx.title}`;
+
       ui.input.focus();
     }
   });
@@ -61,6 +68,23 @@
       ui.input.focus();
     }
   }
+
+  // ----------------------------------------------------------
+  // Limpar a memória da conversa (via background)
+  // ----------------------------------------------------------
+  async function clearConversation() {
+    try {
+      const response = await chrome.runtime.sendMessage({ type: "CLEAR_HISTORY" });
+
+      ui.answerEl.textContent = response.ok
+        ? "🧹 Conversa limpa! Podemos começar do zero."
+        : `⚠️ ${response.error}`;
+    } catch (err) {
+      ui.answerEl.textContent = `⚠️ Falha na comunicação com a extensão: ${err.message}`;
+    }
+  }
+
+  ui.clearBtn.addEventListener("click", clearConversation);
 
   ui.sendBtn.addEventListener("click", ask);
   ui.input.addEventListener("keydown", (e) => {
